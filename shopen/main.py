@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from tortoise import Tortoise
 from fastapi.staticfiles import StaticFiles
-from settings import STATIC_ROOT, DB_CONFIG
+from shopen.settings import STATIC_ROOT, DB_CONFIG
 from tortoise.contrib.fastapi import register_tortoise
 from contextlib import asynccontextmanager
 from pydantic import ValidationError

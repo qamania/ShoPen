@@ -1,9 +1,11 @@
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+if os.getenv('ENV') == 'LOCAL':
+    from dotenv import load_dotenv
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    load_dotenv()
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATIC_ROOT = os.path.join(BASE_DIR, 'shopen/assets')
 
 DB_CONFIG = {
@@ -17,4 +19,3 @@ DB_CONFIG = {
         },
     },
 }
-
