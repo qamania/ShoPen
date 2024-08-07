@@ -9,6 +9,14 @@ router = APIRouter()
 prefix = "/api/v1/users"
 
 
+@router.get(prefix + "")
+async def user_list(api_key: str = Depends(get_api_key)):
+    users = await list_users(api_key)
+    return JSONResponse(status_code=200, content={
+        "users": [{"id": user.id, "username": user.name, "role": user.role, "credit": user.credit} for user in users]
+    })
+
+
 @router.post(prefix + "/login")
 async def user_login(credentials: UserCredentials):
     token = await authenticate(credentials.username, credentials.password)
@@ -27,11 +35,14 @@ async def user_register(credentials: UserCredentials):
     return JSONResponse(status_code=201, content={"token": token})
 
 
-@router.get(prefix + "")
-async def user_list(api_key: str = Depends(get_api_key)):
-    users = await list_users(api_key)
+@router.get(prefix + "/me")
+async def user_me(api_key: str = Depends(get_api_key)):
+    user = await get_user_by_token(api_key)
     return JSONResponse(status_code=200, content={
-        "users": [{"id": user.id, "username": user.name, "role": user.role, "credit": user.credit} for user in users]
+        "id": user.id,
+        "username": user.name,
+        "role": user.role,
+        "credit": user.credit
     })
 
 

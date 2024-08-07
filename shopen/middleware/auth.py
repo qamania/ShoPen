@@ -8,7 +8,9 @@ API_KEY_NAME = "Authorization"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=True)
 
 
-async def clean_sessions():
+async def clean_sessions(user: User = None) -> None:
+    if user is not None:
+        await Session.filter(user=user).delete()
     await Session.filter(expiry__lte=datetime.now()).delete()
 
 
@@ -34,8 +36,8 @@ async def list_users(token: str) -> list[User]:
 
 
 async def authenticate(username: str, password: str) -> str:
-    await clean_sessions()
     user = await User.get_or_none(name=username, password=password)
+    await clean_sessions(user)
     if user is None:
         raise HTTPException(
             status_code=401,
@@ -113,7 +115,6 @@ async def edit_user(supervisor: User, user_id: int,
             status_code=403,
             detail="Only admins can reset user passwords",
         )
-
 
 
 async def delete_session(token: str) -> None:

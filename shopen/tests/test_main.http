@@ -9,4 +9,28 @@ GET http://127.0.0.1:8000/hello/User
 Accept: application/json
 
 
-###
+### my tests
+### Authorization by token, part 1. Retrieve and save token.
+POST http://127.0.0.1:8000/api/v1/users/login
+Content-Type: application/json
+
+{
+  "username": "hello",
+  "password": "world"
+}
+
+> {% client.global.set("auth_token", response.body.token); %}
+
+### Authorization by token, part 2. Use token to authorize.
+GET http://127.0.0.1:8000/api/v1/users/me
+Authorization: {{auth_token}}
+
+> {%
+    client.test("user details", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.id != null, "Cannot find 'id' option in response");
+        client.assert(response.body.username != null, "Cannot find 'username' option in response");
+        // client.assert(response.body.hasOwnProperty("role"), "Cannot find 'role' option in response");
+        // client.assert(response.body.hasOwnProperty("credit"), "Cannot find 'credit' option in response");
+    });
+%}

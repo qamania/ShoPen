@@ -28,9 +28,10 @@ class Transaction(Model):
     user = fields.ForeignKeyField('models.User',
                                   related_name='transactions',
                                   on_delete=fields.CASCADE)
+    price = fields.FloatField()
     timestamp = fields.DatetimeField(auto_now_add=True)
-    order = fields.JSONField()  # list of pen ids + number + price
-    status = fields.TextField(default='requested')  # requested, completed, cancelled
+    order = fields.JSONField()  # list of pen ids + number
+    status = fields.TextField(default='requested')  # requested, completed, cancelled, refunded
 
 
 class Session(Model):

@@ -2,23 +2,32 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from tortoise import Tortoise
 from fastapi.staticfiles import StaticFiles
-from shopen.settings import STATIC_ROOT, DB_CONFIG
+from shopen.settings import STATIC_ROOT, DB_CONFIG, SUPER_ADMIN_TOKEN
 from tortoise.contrib.fastapi import register_tortoise
 from contextlib import asynccontextmanager
 from pydantic import ValidationError
-from shopen.api.users import router as user_router
+from shopen.api.users_v1 import router as user_router
+from shopen.api.shop_v1 import router as shop_router
+from shopen.api.transaction_v1 import router as transaction_router
+from shopen.models.setup import (is_db_empty, setup_reset,
+                                 set_default_stock, set_default_users)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # do something before the application starts
+    if await is_db_empty():
+        await set_default_users()
+        await set_default_stock()
     yield
     # do something after the application stops
     await Tortoise.close_connections()
 
 
 app = FastAPI(lifespan=lifespan)
-app.mount('/assets', StaticFiles(directory=STATIC_ROOT), name='assets')
+# app.mount('/assets', StaticFiles(directory=STATIC_ROOT), name='assets')
 app.include_router(user_router)
+app.include_router(shop_router)
+app.include_router(transaction_router)
 
 register_tortoise(app=app,
                   config=DB_CONFIG,
@@ -44,9 +53,13 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"shopen": "Шо? Pen?",
+            "apiUrl": "/docs"}
 
 
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
+@app.get("/factoryReset/{key}")
+async def factory_reset(key: str):
+    await setup_reset()
+    await set_default_users()
+    await set_default_stock()
+    return {"message": "Factory reset done"}
