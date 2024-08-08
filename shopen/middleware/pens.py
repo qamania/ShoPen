@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import HTTPException
 from tortoise.transactions import in_transaction
 from shopen.models.models import User, Session, Pen, Transaction
@@ -18,15 +18,23 @@ async def list_pens(
         color: list[str] = None,
         min_length: float = None,
         max_length: float = None) -> list[Pen]:
-    return await Pen.filter(
-        brand__in=brand,
-        price__gte=min_price,
-        price__lte=max_price,
-        stock__gt=min_stock,
-        color__in=color,
-        length__gte=min_length,
-        length__lte=max_length,
-        is_deleted=False)
+    filters = {"is_deleted": False}
+
+    if brand:
+        filters["brand__in"] = brand
+    if min_price is not None:
+        filters["price__gte"] = min_price
+    if max_price is not None:
+        filters["price__lte"] = max_price
+    if min_stock is not None:
+        filters["stock__gt"] = min_stock
+    if color:
+        filters["color__in"] = color
+    if min_length is not None:
+        filters["length__gte"] = min_length
+    if max_length is not None:
+        filters["length__lte"] = max_length
+    return await Pen.filter(**filters)
 
 
 async def get_pen(id: int) -> Pen:
@@ -78,7 +86,8 @@ async def get_transaction(user: User, id: int) -> Transaction:
             status_code=404,
             detail="Transaction not found",
         )
-    if user.role == 'admin' or transaction.user.id == user.id:
+    transaction_user = await transaction.user.get()
+    if user.role == 'admin' or transaction_user.id == user.id:
         return transaction
     else:
         raise HTTPException(
@@ -87,10 +96,13 @@ async def get_transaction(user: User, id: int) -> Transaction:
 
 
 async def list_transactions(user: User, show_own=True, status: str = None) -> list[Transaction]:
-    if show_own:
-        return await Transaction.filter(user=user, status=status)
-    elif user.role == 'admin':
-        return await Transaction.filter(status=status)
+    filter = {}
+    if show_own or user.role != 'admin':
+        filter['user'] = user
+    if status:
+        filter['status'] = status
+
+    return await Transaction.filter(**filter)
 
 
 async def request_pens(user: User, invoice: TransactionRequest) -> Transaction:
@@ -160,7 +172,8 @@ async def complete_transaction(user: User, transaction_id: int) -> None:
 
 async def cancel_transaction(user: User, transaction_id: int) -> None:
     transaction = await get_transaction(user, transaction_id)
-    if user.id != transaction.user.id:
+    tr_user = await transaction.user.get()
+    if user.id != tr_user.id:
         raise HTTPException(
             status_code=403,
             detail="You can only cancel your own transactions")
@@ -174,7 +187,8 @@ async def cancel_transaction(user: User, transaction_id: int) -> None:
 
 async def refund_transaction(user: User, transaction_id: int) -> None:
     transaction = await get_transaction(user, transaction_id)
-    if user.id != transaction.user.id:
+    tr_user = await transaction.user.get()
+    if user.id != tr_user.id:
         raise HTTPException(
             status_code=403,
             detail="You can only refund your own transactions")
@@ -182,7 +196,7 @@ async def refund_transaction(user: User, transaction_id: int) -> None:
         raise HTTPException(
             status_code=400,
             detail="Transaction is not completed")
-    if (datetime.now() - transaction.timestamp).seconds > TRANSACTION_REQUEST_THRESHOLD * 60:
+    if (datetime.now(timezone.utc) - transaction.timestamp).seconds > TRANSACTION_REQUEST_THRESHOLD * 60:
         raise HTTPException(
             status_code=400,
             detail="Transaction request is expired and cannot be refunded")

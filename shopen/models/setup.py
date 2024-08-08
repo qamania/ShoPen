@@ -8,11 +8,11 @@ async def setup_reset():
     await Pen.all().delete()
 
 
-async def set_default_users():
-    await User.create(name='admin',
-                      password='admin',
-                      role='admin',
-                      is_superuser=True)
+async def set_default_users() -> User:
+    return await User.create(name='admin',
+                             password='admin',
+                             role='admin',
+                             is_superuser=True)
 
 
 async def set_default_stock():

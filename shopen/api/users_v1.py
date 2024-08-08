@@ -9,7 +9,7 @@ router = APIRouter()
 prefix = "/api/v1/users"
 
 
-@router.get(prefix + "")
+@router.get(prefix + "/list")
 async def user_list(api_key: str = Depends(get_api_key)):
     users = await list_users(api_key)
     return JSONResponse(status_code=200, content={
@@ -46,7 +46,7 @@ async def user_me(api_key: str = Depends(get_api_key)):
     })
 
 
-@router.get(prefix + "/{user_id}")
+@router.get(prefix + "/user/{user_id}")
 async def user_get(user_id: int, api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
     if user.role == 'admin' or user.id == user_id:
@@ -61,7 +61,7 @@ async def user_get(user_id: int, api_key: str = Depends(get_api_key)):
         return JSONResponse(status_code=403, content={"error": "Only admins can view other users"})
 
 
-@router.put(prefix + "/{user_id}/promote")
+@router.put(prefix + "/user/{user_id}/promote")
 async def user_promote(user_id: int, api_key: str = Depends(get_api_key)):
     promoter = await get_user_by_token(api_key)
     promotee = await get_user(id=user_id)
@@ -69,7 +69,7 @@ async def user_promote(user_id: int, api_key: str = Depends(get_api_key)):
     return JSONResponse(status_code=200, content={"message": "User promoted"})
 
 
-@router.patch(prefix + "/{user_id}/credit")
+@router.patch(prefix + "/user/{user_id}/credit")
 async def set_user_credit(user_id: int, credit: float, api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
     if user.role != 'admin':
@@ -81,7 +81,7 @@ async def set_user_credit(user_id: int, credit: float, api_key: str = Depends(ge
     return JSONResponse(status_code=200, content={"message": "User credit set"})
 
 
-@router.put(prefix + "/{user_id}/edit")
+@router.put(prefix + "/user/{user_id}/edit")
 async def user_edit(user_id: int, credentials: UserCredentials, api_key: str = Depends(get_api_key)):
     supervisor = await get_user_by_token(api_key)
     await edit_user(supervisor, user_id, credentials.username, credentials.password)

@@ -16,9 +16,11 @@ async def clean_sessions(user: User = None) -> None:
 
 async def get_user(id: int = None, name: str = None) -> User:
     if id is not None:
-        return await User.get_or_none(id=id)
-    if name is not None:
-        return await User.get_or_none(name=name)
+        user = await User.get_or_none(id=id)
+    elif name is not None:
+        user = await User.get_or_none(name=name)
+    if user is not None:
+        return user
     raise HTTPException(
         status_code=400,
         detail="User not found",
@@ -101,7 +103,7 @@ async def get_user_by_token(token: str) -> User:
 async def edit_user(supervisor: User, user_id: int,
                     username: str, password: str) -> None:
     if supervisor.role == 'admin' or supervisor.id == user_id:
-        if User.exists(name=username):
+        if await User.exists(name=username):
             raise HTTPException(
                 status_code=400,
                 detail="Username already exists")
