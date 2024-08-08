@@ -20,12 +20,6 @@ class TestMiddlewareAuth(test.TestCase):
         self.user = await User.create(name='test', password='test', credit=1000)
         self.admin_token = 'admin_token'
         self.user_token = 'user_token'
-        await Session.create(user=self.admin,
-                             token=self.admin_token,
-                             expiry=datetime.now() + timedelta(days=1))
-        await Session.create(user=self.user,
-                             token=self.user_token,
-                             expiry=datetime.now() + timedelta(days=1))
         self.pen = await Pen.create(brand='space', price=10, stock=1000, color='blue', length=5)
 
     async def test_list_pens(self):
@@ -179,7 +173,7 @@ class TestMiddlewareAuth(test.TestCase):
         transaction = await Transaction.create(user=self.user,
                                                price=10,
                                                order=order,
-                                               timestamp=datetime.now() - timedelta(hours=50),
+                                               timestamp=datetime.now(timezone.utc) - timedelta(hours=50),
                                                status='completed')
         with self.assertRaises(HTTPException):
             await refund_transaction(self.user, transaction.id)

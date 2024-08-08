@@ -139,7 +139,7 @@ async def complete_transaction(user: User, transaction_id: int) -> None:
         raise HTTPException(
             status_code=400,
             detail="Transaction is already processed")
-    if (datetime.now() - transaction.timestamp).seconds > TRANSACTION_REQUEST_THRESHOLD * 60:
+    if (datetime.now(timezone.utc) - transaction.timestamp).seconds > TRANSACTION_REQUEST_THRESHOLD * 60:
         transaction.status = 'cancelled'
         await transaction.save()
         raise HTTPException(

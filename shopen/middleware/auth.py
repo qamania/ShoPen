@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, Security
 from fastapi.security.api_key import APIKeyHeader
 from shopen.models.models import User, Session
@@ -11,7 +11,7 @@ api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=True)
 async def clean_sessions(user: User = None) -> None:
     if user is not None:
         await Session.filter(user=user).delete()
-    await Session.filter(expiry__lte=datetime.now()).delete()
+    await Session.filter(expiry__lte=datetime.now(timezone.utc)).delete()
 
 
 async def get_user(id: int = None, name: str = None) -> User:
@@ -48,7 +48,7 @@ async def authenticate(username: str, password: str) -> str:
     token = str(uuid.uuid4())
     await Session.create(user=user,
                          token=token,
-                         expiry=datetime.now() + timedelta(days=1))
+                         expiry=datetime.now(timezone.utc) + timedelta(days=1))
     return token
 
 
@@ -91,7 +91,7 @@ async def set_user_credit(supervisor: User, user: User, credit: float) -> None:
 
 async def get_user_by_token(token: str) -> User:
     await clean_sessions()
-    session = await Session.get_or_none(token=token, expiry__gte=datetime.now())
+    session = await Session.get_or_none(token=token, expiry__gte=datetime.now(timezone.utc))
     if session is None:
         raise HTTPException(
             status_code=403,
@@ -124,7 +124,7 @@ async def delete_session(token: str) -> None:
 
 
 async def get_api_key(header: str = Security(api_key_header)) -> str:
-    if await Session.exists(token=header, expiry__gte=datetime.now()):
+    if await Session.exists(token=header, expiry__gte=datetime.now(timezone.utc)):
         return header
     else:
         raise HTTPException(

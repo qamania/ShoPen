@@ -19,10 +19,10 @@ class TestMiddlewareAuth(test.TestCase):
         self.user_token = 'user_token'
         await Session.create(user=self.admin,
                              token=self.admin_token,
-                             expiry=datetime.now() + timedelta(days=1))
+                             expiry=datetime.now(timezone.utc) + timedelta(days=1))
         await Session.create(user=self.user,
                              token=self.user_token,
-                             expiry=datetime.now() + timedelta(days=1))
+                             expiry=datetime.now(timezone.utc) + timedelta(days=1))
 
     async def test_register(self):
         try:
@@ -100,11 +100,11 @@ class TestMiddlewareAuth(test.TestCase):
 
     async def test_get_user_by_token_expired(self):
         try:
-            await Session.filter(token=self.user_token).update(expiry=datetime.now() - timedelta(days=1))
+            await Session.filter(token=self.user_token).update(expiry=datetime.now(timezone.utc) - timedelta(days=1))
             with self.assertRaises(HTTPException):
                 await get_user_by_token(self.user_token)
         finally:
-            await Session.filter(token=self.user_token).update(expiry=datetime.now() + timedelta(days=1))
+            await Session.filter(token=self.user_token).update(expiry=datetime.now(timezone.utc) + timedelta(days=1))
 
     async def test_get_user_by_token_nonexistent(self):
         with self.assertRaises(HTTPException):
