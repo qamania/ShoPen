@@ -8,10 +8,9 @@ from shopen.middleware.auth import get_api_key, get_user_by_token
 from shopen.models.schemas import TransactionRequest
 
 router = APIRouter()
-prefix = "/api/v1/transactions"
 
 
-@router.get(prefix + "")
+@router.get("", summary="List transactions", description="List transactions in the system")
 async def list_transactions_api(
         show_own: Optional[bool] = Query(None, alias='showOwn', description='show only transactions of the user'),
         status: Optional[str] = Query(None, alias='status',
@@ -32,7 +31,7 @@ async def list_transactions_api(
     })
 
 
-@router.get(prefix + "/{transaction_id}")
+@router.get("/{transaction_id}", summary="Get transaction", description="Get transaction by id")
 async def get_transaction_api(transaction_id: int, api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
     transaction = await get_transaction(user, transaction_id)
@@ -46,7 +45,7 @@ async def get_transaction_api(transaction_id: int, api_key: str = Depends(get_ap
     })
 
 
-@router.post(prefix + "/request")
+@router.post("/request", summary="Request pens", description="Create a new transaction request in state requested")
 async def request_pens_api(invoice: TransactionRequest, api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
     transaction = await request_pens(user, invoice)
@@ -60,21 +59,21 @@ async def request_pens_api(invoice: TransactionRequest, api_key: str = Depends(g
     })
 
 
-@router.post(prefix + "/{transaction_id}/complete")
+@router.post("/{transaction_id}/complete", summary="Complete transaction", description="Pens amount are reduced as well as user credit")
 async def complete_transaction_api(transaction_id: int, api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
     await complete_transaction(user, transaction_id)
     return JSONResponse(status_code=200, content={"message": "Transaction completed"})
 
 
-@router.post(prefix + "/{transaction_id}/cancel")
+@router.post("/{transaction_id}/cancel", summary="Cancel transaction", description="Cancel a requested transaction")
 async def cancel_transaction_api(transaction_id: int, api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
     await cancel_transaction(user, transaction_id)
     return JSONResponse(status_code=200, content={"message": "Transaction cancelled"})
 
 
-@router.post(prefix + "/{transaction_id}/refund")
+@router.post("/{transaction_id}/refund", summary="Refund transaction", description="Refund a completed transaction")
 async def refund_transaction_api(transaction_id: int, api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
     await refund_transaction(user, transaction_id)

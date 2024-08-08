@@ -25,7 +25,7 @@ class User(Model):
 
 class Transaction(Model):
     id = fields.IntField(primary_key=True, generated=True)
-    user: User = fields.ForeignKeyField('models.User',
+    user = fields.ForeignKeyField('models.User',
                                         related_name='transactions',
                                         on_delete=fields.CASCADE)
     price = fields.FloatField()
@@ -36,7 +36,7 @@ class Transaction(Model):
 
 class Session(Model):
     id = fields.IntField(primary_key=True, generated=True)
-    user: User = fields.ForeignKeyField('models.User',
+    user = fields.ForeignKeyField('models.User',
                                   related_name='sessions',
                                   on_delete=fields.CASCADE)
     token = fields.TextField()

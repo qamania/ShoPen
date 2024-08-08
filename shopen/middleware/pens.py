@@ -1,3 +1,4 @@
+from typing import Optional
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from tortoise.transactions import in_transaction
@@ -10,13 +11,13 @@ from shopen.settings import (ADMIN_DISCOUNT, WHOLESALE_DISCOUNT,
 
 
 async def list_pens(
-        brand: list[str] = None,
-        min_price: float = None,
-        max_price: float = None,
-        min_stock: float = None,
-        color: list[str] = None,
-        min_length: float = None,
-        max_length: float = None) -> list[Pen]:
+        brand: Optional[list[str]] = None,
+        min_price: Optional[float] = None,
+        max_price: Optional[float] = None,
+        min_stock: Optional[float] = None,
+        color: Optional[list[str]] = None,
+        min_length: Optional[float] = None,
+        max_length: Optional[float] = None) -> list[Pen]:
     filters = {"is_deleted": False}
 
     if brand:
@@ -94,7 +95,7 @@ async def get_transaction(user: User, id: int) -> Transaction:
             detail="Only admins can view other users' transactions")
 
 
-async def list_transactions(user: User, show_own=True, status: str = None) -> list[Transaction]:
+async def list_transactions(user: User, show_own=True, status: Optional[str] = None) -> list[Transaction]:
     filter = {}
     if show_own or user.role != 'admin':
         filter['user'] = user
@@ -105,7 +106,7 @@ async def list_transactions(user: User, show_own=True, status: str = None) -> li
 
 
 async def request_pens(user: User, invoice: TransactionRequest) -> Transaction:
-    total_price = 0
+    total_price = 0.0
     for pen_request in invoice.order:
         pen = await get_pen(pen_request.id)
         if pen.stock < pen_request.count:

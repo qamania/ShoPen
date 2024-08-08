@@ -6,10 +6,8 @@ from shopen.middleware.auth import (authenticate, create_user,
 from shopen.models.schemas import UserCredentials
 
 router = APIRouter()
-prefix = "/api/v1/users"
 
-
-@router.get(prefix + "/list")
+@router.get("/list", summary="List all users", description="List all users in the system")
 async def user_list(api_key: str = Depends(get_api_key)):
     users = await list_users(api_key)
     return JSONResponse(status_code=200, content={
@@ -17,25 +15,27 @@ async def user_list(api_key: str = Depends(get_api_key)):
     })
 
 
-@router.post(prefix + "/login")
+@router.post("/login", summary="Login",
+             description="Login to the system. Returns a token to be used in Authentication header")
 async def user_login(credentials: UserCredentials):
     token = await authenticate(credentials.username, credentials.password)
     return JSONResponse(status_code=200, content={"token": token})
 
 
-@router.get(prefix + "/logout")
+@router.get("/logout", summary="Logout", description="Logout from the system")
 async def user_logout(api_key: str = Depends(get_api_key)):
     await delete_session(api_key)
     return JSONResponse(status_code=200, content={"message": "Logged out"})
 
 
-@router.post(prefix + "/register")
+@router.post("/register", summary="Register",
+             description="Register to the system. Returns a token to be used in Authentication header")
 async def user_register(credentials: UserCredentials):
     token = await create_user(credentials.username, credentials.password)
     return JSONResponse(status_code=201, content={"token": token})
 
 
-@router.get(prefix + "/me")
+@router.get("/me", summary="Get user info", description="Get info of the authenticated user by token")
 async def user_me(api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
     return JSONResponse(status_code=200, content={
@@ -46,7 +46,8 @@ async def user_me(api_key: str = Depends(get_api_key)):
     })
 
 
-@router.get(prefix + "/user/{user_id}")
+@router.get("/user/{user_id}", summary="Get user info",
+            description="Get info of a user by id. Admins can view all users info")
 async def user_get(user_id: int, api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
     if user.role == 'admin' or user.id == user_id:
@@ -61,7 +62,8 @@ async def user_get(user_id: int, api_key: str = Depends(get_api_key)):
         return JSONResponse(status_code=403, content={"error": "Only admins can view other users"})
 
 
-@router.put(prefix + "/user/{user_id}/promote")
+@router.put("/user/{user_id}/promote", summary="Promote user to admin",
+            description="Promote 'customer' to 'admin'")
 async def user_promote(user_id: int, api_key: str = Depends(get_api_key)):
     promoter = await get_user_by_token(api_key)
     promotee = await get_user(id=user_id)
@@ -69,7 +71,8 @@ async def user_promote(user_id: int, api_key: str = Depends(get_api_key)):
     return JSONResponse(status_code=200, content={"message": "User promoted"})
 
 
-@router.patch(prefix + "/user/{user_id}/credit")
+@router.patch("/user/{user_id}/credit", summary="Set user credit",
+              description="Set user credit by admin to make purchases")
 async def set_user_credit(user_id: int, credit: float, api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
     if user.role != 'admin':
@@ -81,7 +84,8 @@ async def set_user_credit(user_id: int, credit: float, api_key: str = Depends(ge
     return JSONResponse(status_code=200, content={"message": "User credit set"})
 
 
-@router.put(prefix + "/user/{user_id}/edit")
+@router.put("/user/{user_id}/edit", summary="Edit user",
+            description="Can change username and password. Admins can edit any user")
 async def user_edit(user_id: int, credentials: UserCredentials, api_key: str = Depends(get_api_key)):
     supervisor = await get_user_by_token(api_key)
     await edit_user(supervisor, user_id, credentials.username, credentials.password)

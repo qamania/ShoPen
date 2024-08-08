@@ -7,10 +7,8 @@ from shopen.middleware.auth import get_api_key, get_user_by_token
 from shopen.models.schemas import (PenRequest, NewPen)
 
 router = APIRouter()
-prefix = "/api/v1/pens"
 
-
-@router.get(prefix + "")
+@router.get("", summary="List pens", description="List pens in the system. No authentication required")
 async def list_pens_api(
         brand: Optional[List[str]] = Query(None, alias='brand', description='name of brands, coma separated'),
         min_price: Optional[float] = Query(None, alias='minPrice', description='minimum pen price'),
@@ -30,7 +28,7 @@ async def list_pens_api(
     })
 
 
-@router.get(prefix + "/{pen_id}")
+@router.get("/{pen_id}", summary="Get pen", description="Get pen by id. No authentication required")
 async def get_pen_api(pen_id: int):
     pen = await get_pen(pen_id)
     return JSONResponse(status_code=200, content={
@@ -43,7 +41,7 @@ async def get_pen_api(pen_id: int):
     })
 
 
-@router.post(prefix + "/add")
+@router.post("/add", summary="Add pen", description="Add a new pen to the system. Admins only")
 async def add_pen_api(pen_request: NewPen, api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
     pen = await add_pen(user, pen_request.brand, pen_request.price,
@@ -58,7 +56,7 @@ async def add_pen_api(pen_request: NewPen, api_key: str = Depends(get_api_key)):
     })
 
 
-@router.patch(prefix + "/restock")
+@router.patch("/restock", summary="Restock pen", description="Restock a pen in the system. Admins only")
 async def restock_pen_api(p: PenRequest, api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
     pen = await restock_pen(user, p.id, p.count)
@@ -72,7 +70,7 @@ async def restock_pen_api(p: PenRequest, api_key: str = Depends(get_api_key)):
     })
 
 
-@router.delete(prefix + "/{pen_id}")
+@router.delete("/{pen_id}", summary="Delete pen", description="Delete a pen from the system. Admins only")
 async def delete_pen_api(pen_id: int, api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
     await delete_pen(user, pen_id)

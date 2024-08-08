@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from tortoise import Tortoise
-from shopen.settings import DB_CONFIG, SUPER_ADMIN_TOKEN
+from shopen.settings import DB_CONFIG, SUPER_ADMIN_TOKEN, VERSION
 from tortoise.contrib.fastapi import register_tortoise
 from contextlib import asynccontextmanager
 from pydantic import ValidationError
@@ -22,11 +22,16 @@ async def lifespan(app: FastAPI):
     await Tortoise.close_connections()
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(title="Shopen API",
+              description="Web app shop to buy pens, expose API to manage users, shop and transactions",
+              version=VERSION,
+              openapi_url="/api/v1/openapi.json",
+              docs_url="/api/v1/docs",
+              lifespan=lifespan)
 # app.mount('/assets', StaticFiles(directory=STATIC_ROOT), name='assets')
-app.include_router(user_router)
-app.include_router(shop_router)
-app.include_router(transaction_router)
+app.include_router(user_router, prefix="/api/v1/users", tags=["users"])
+app.include_router(shop_router, prefix="/api/v1/pens", tags=["shop"])
+app.include_router(transaction_router, prefix="/api/v1/transactions", tags=["transactions"])
 
 register_tortoise(app=app,
                   config=DB_CONFIG,
@@ -53,7 +58,7 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
 @app.get("/")
 async def root():
     return {"shopen": "Шо? Pen?",
-            "apiUrl": "/docs"}
+            "apiUrl": "api/v1/docs"}
 
 
 @app.get("/factoryReset/{key}")

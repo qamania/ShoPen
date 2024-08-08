@@ -5,6 +5,8 @@ if os.getenv('ENV') == 'LOCAL':
 
     load_dotenv()
 
+VERSION = "1.0.0"
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATIC_ROOT = os.path.join(BASE_DIR, 'shopen/assets')
 

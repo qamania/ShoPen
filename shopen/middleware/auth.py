@@ -15,7 +15,8 @@ async def clean_sessions(user: Optional[User] = None) -> None:
     await Session.filter(expiry__lte=datetime.now(timezone.utc)).delete()
 
 
-async def get_user(id: int = None, name: str = None) -> User:
+async def get_user(id: Optional[int] = None,
+                   name: Optional[str] = None) -> User:
     if id is not None:
         user = await User.get_or_none(id=id)
     elif name is not None:
