@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import (BaseModel, field_validator as validator,
-                      ValidationError, conint, Field)
+                      ValidationError, conint)
 
 
 class UserCredentials(BaseModel):

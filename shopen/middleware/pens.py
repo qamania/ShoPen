@@ -1,9 +1,8 @@
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from tortoise.transactions import in_transaction
-from shopen.models.models import User, Session, Pen, Transaction
-from shopen.models.schemas import (PenRequest, TransactionRequest,
-                                   TransactionStatus, NewPen)
+from shopen.models.models import User, Pen, Transaction
+from shopen.models.schemas import TransactionRequest
 from shopen.settings import (ADMIN_DISCOUNT, WHOLESALE_DISCOUNT,
                              WHOLESALE_THRESHOLD,
                              TRANSACTION_REQUEST_THRESHOLD,
@@ -196,7 +195,7 @@ async def refund_transaction(user: User, transaction_id: int) -> None:
         raise HTTPException(
             status_code=400,
             detail="Transaction is not completed")
-    if (datetime.now(timezone.utc) - transaction.timestamp).seconds > TRANSACTION_REQUEST_THRESHOLD * 60:
+    if (datetime.now(timezone.utc) - transaction.timestamp).seconds > TRANSACTION_REFUND_THRESHOLD * 60:
         raise HTTPException(
             status_code=400,
             detail="Transaction request is expired and cannot be refunded")

@@ -1,11 +1,15 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from fastapi import HTTPException
 from tortoise.contrib import test
 from tortoise.contrib.test import initializer, finalizer
 from shopen.models.setup import set_default_users
-from shopen.middleware.pens import *
+from shopen.models.models import Pen, User, Transaction
+from shopen.models.schemas import PenRequest, TransactionRequest
+from shopen.middleware.pens import list_pens, get_pen, add_pen, restock_pen, delete_pen, get_transaction, \
+    list_transactions, request_pens, cancel_transaction, refund_transaction
 
+order = [{'penId': 1, 'number': 3}]
 
-order =[ {'penId': 1, 'number': 3}]
 
 class TestMiddlewareAuth(test.TestCase):
     def setUp(self):
@@ -182,5 +186,3 @@ class TestMiddlewareAuth(test.TestCase):
         transaction = await Transaction.create(user=self.admin, price=10, order=order)
         with self.assertRaises(HTTPException):
             await refund_transaction(self.user, transaction.id)
-
-

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from tortoise import Tortoise
-from shopen.settings import STATIC_ROOT, DB_CONFIG, SUPER_ADMIN_TOKEN
+from shopen.settings import DB_CONFIG, SUPER_ADMIN_TOKEN
 from tortoise.contrib.fastapi import register_tortoise
 from contextlib import asynccontextmanager
 from pydantic import ValidationError

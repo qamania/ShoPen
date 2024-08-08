@@ -40,4 +40,3 @@ class TestModel(test.TestCase):
         self.assertEqual(session.user, user)
         self.assertEqual(session.token, "token")
         self.assertEqual(session.expiry, exp)
-
