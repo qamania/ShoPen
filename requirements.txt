@@ -3,3 +3,4 @@ tortoise-orm
 anyio
 trio
 httpx
+a2wsgi
