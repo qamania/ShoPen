@@ -25,9 +25,9 @@ class User(Model):
 
 class Transaction(Model):
     id = fields.IntField(primary_key=True, generated=True)
-    user = fields.ForeignKeyField('models.User',
-                                  related_name='transactions',
-                                  on_delete=fields.CASCADE)
+    user: User = fields.ForeignKeyField('models.User',
+                                        related_name='transactions',
+                                        on_delete=fields.CASCADE)
     price = fields.FloatField()
     timestamp = fields.DatetimeField(auto_now_add=True)
     order = fields.JSONField()  # list of pen ids + number
@@ -36,7 +36,7 @@ class Transaction(Model):
 
 class Session(Model):
     id = fields.IntField(primary_key=True, generated=True)
-    user = fields.ForeignKeyField('models.User',
+    user: User = fields.ForeignKeyField('models.User',
                                   related_name='sessions',
                                   on_delete=fields.CASCADE)
     token = fields.TextField()

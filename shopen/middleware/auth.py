@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, Security
 from fastapi.security.api_key import APIKeyHeader
@@ -8,7 +9,7 @@ API_KEY_NAME = "Authorization"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=True)
 
 
-async def clean_sessions(user: User = None) -> None:
+async def clean_sessions(user: Optional[User] = None) -> None:
     if user is not None:
         await Session.filter(user=user).delete()
     await Session.filter(expiry__lte=datetime.now(timezone.utc)).delete()
