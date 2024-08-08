@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from tortoise import Tortoise
-from fastapi.staticfiles import StaticFiles
 from shopen.settings import STATIC_ROOT, DB_CONFIG, SUPER_ADMIN_TOKEN
 from tortoise.contrib.fastapi import register_tortoise
 from contextlib import asynccontextmanager
@@ -59,6 +58,10 @@ async def root():
 
 @app.get("/factoryReset/{key}")
 async def factory_reset(key: str):
+    if key != SUPER_ADMIN_TOKEN:
+        raise HTTPException(
+            status_code=403,
+            detail="Only super admin can reset the database")
     await setup_reset()
     await set_default_users()
     await set_default_stock()

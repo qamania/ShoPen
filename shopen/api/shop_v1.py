@@ -1,5 +1,5 @@
 from typing import Optional, List
-from fastapi import Request, APIRouter, Response, Query, Depends
+from fastapi import APIRouter, Query, Depends
 from fastapi.responses import JSONResponse
 from shopen.middleware.pens import (list_pens, get_pen, add_pen,
                                     restock_pen, delete_pen)

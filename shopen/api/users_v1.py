@@ -1,4 +1,4 @@
-from fastapi import Request, APIRouter, Response, Depends
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from shopen.middleware.auth import (authenticate, create_user,
                                     promote_user, get_api_key, get_user_by_token,
