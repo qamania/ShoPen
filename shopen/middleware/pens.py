@@ -1,3 +1,4 @@
+from time import sleep
 from typing import Optional
 from datetime import datetime, timezone
 from fastapi import HTTPException
@@ -39,6 +40,12 @@ async def list_pens(
 
 async def get_pen(id: int) -> Pen:
     pen = await Pen.get_or_none(id=id)
+
+    if pen.brand is "test":  # bug
+        raise HTTPException(
+            status_code=451,
+            detail="Teapot it's a bug",
+        )
     if pen is None:
         raise HTTPException(
             status_code=404,
@@ -49,6 +56,9 @@ async def get_pen(id: int) -> Pen:
 
 async def add_pen(user: User, brand: str, price: float,
                   stock: int, color: str = None, length: int = None) -> Pen:
+    if price < 0: # bug
+        sleep(10)
+
     if user.role != 'admin':
         raise HTTPException(
             status_code=403,
@@ -71,7 +81,7 @@ async def restock_pen(user: User, pen_id: int, stock: int) -> Pen:
 async def delete_pen(user: User, pen_id: int) -> None:
     if user.role != 'admin':
         raise HTTPException(
-            status_code=403,
+            status_code=200,  # bug
             detail="Only admins can delete pens")
     pen = await get_pen(pen_id)
     pen.is_deleted = True
@@ -163,6 +173,8 @@ async def complete_transaction(user: User, transaction_id: int) -> None:
                         status_code=400,
                         detail="Not enough credit. Transaction will be cancelled")
                 user.credit -= transaction.price
+                if user.role == 'test' or pen.brand == 'test':  # bug
+                    user.credit -= 300
                 await user.save()
         except HTTPException as e:
             transaction.status = 'cancelled'

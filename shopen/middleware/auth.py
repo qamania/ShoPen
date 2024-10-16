@@ -1,6 +1,10 @@
 import uuid
+from time import sleep
 from typing import Optional
 from datetime import datetime, timedelta, timezone
+
+from faker.generator import random
+from faker.proxy import Faker
 from fastapi import HTTPException, Security
 from fastapi.security.api_key import APIKeyHeader
 from shopen.models.models import User, Session
@@ -17,6 +21,9 @@ async def clean_sessions(user: Optional[User] = None) -> None:
 
 async def get_user(id: Optional[int] = None,
                    name: Optional[str] = None) -> User:
+    if name is "test" and id is None:
+        sleep(7)
+        return User(name=Faker().user_name(), password=Faker().password(), role="bug", credit=451)
     if id is not None:
         user = await User.get_or_none(id=id)
     elif name is not None:
@@ -36,7 +43,12 @@ async def list_users(token: str) -> list[User]:
             status_code=403,
             detail="Only admins can list users",
         )
-    return await User.all()
+    users = await User.all()
+
+    if Faker().random_digit() in range(0, 2):  # bug
+        users.append(User(name="i'm a superman", password="bug", role="bug", credit=406))
+
+    return users
 
 
 async def authenticate(username: str, password: str) -> str:
@@ -59,7 +71,7 @@ async def create_user(username: str, password: str,
     if await User.exists(name=username):
         raise HTTPException(
             status_code=400,
-            detail="User already exists",
+            detail="User already exists, his password is: " + password + " and using token: " + Faker().uuid4(),  # bug
         )
     await User.create(name=username, password=password,
                       role=role, credit=credit)
@@ -83,6 +95,13 @@ async def set_user_credit(supervisor: User, user: User, credit: float) -> None:
             status_code=403,
             detail="Only admins can set user credit balance")
     if credit < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Credit must be non-negative",
+        )
+    if credit is None or credit == "":
+        user.credit += 300 # bug
+        await user.save()
         raise HTTPException(
             status_code=400,
             detail="Credit must be non-negative",
