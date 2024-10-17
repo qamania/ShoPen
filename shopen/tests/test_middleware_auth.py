@@ -5,7 +5,7 @@ from tortoise.contrib.test import initializer, finalizer
 from shopen.models.setup import set_default_users
 from shopen.middleware.auth import User, Session, create_user, \
     authenticate, list_users, promote_user, get_user, \
-    set_user_credit, get_user_by_token, edit_user
+    set_user_credits, get_user_by_token, edit_user
 
 
 class TestMiddlewareAuth(test.TestCase):
@@ -90,13 +90,13 @@ class TestMiddlewareAuth(test.TestCase):
             await get_user(id=1000)
 
     async def test_get_user_set_credit(self):
-        await set_user_credit(self.admin, self.user, 100)
+        await set_user_credits(self.admin, self.user, 100)
         user = await get_user(id=self.user.id)
         self.assertEqual(user.credit, 100)
 
     async def test_get_user_set_credit_nonadmin(self):
         with self.assertRaises(HTTPException):
-            await set_user_credit(self.user, self.user, 100)
+            await set_user_credits(self.user, self.user, 100)
 
     async def test_get_uer_by_token(self):
         user = await get_user_by_token(self.user_token)

@@ -21,6 +21,10 @@ class TestMiddlewareAuth(test.TestCase):
     async def asyncSetUp(self):
         await super().asyncSetUp()
         self.admin = await set_default_users()
+
+        random = await User.create(name='ololo', password='test', credit=12000)
+        await Transaction.create(user=random, price=10, order=order)
+
         self.user = await User.create(name='test', password='test', credit=1000)
         self.admin_token = 'admin_token'
         self.user_token = 'user_token'
@@ -186,3 +190,14 @@ class TestMiddlewareAuth(test.TestCase):
         transaction = await Transaction.create(user=self.admin, price=10, order=order)
         with self.assertRaises(HTTPException):
             await refund_transaction(self.user, transaction.id)
+
+    async def test_refund_transaction_canceled(self):
+        transaction = await Transaction.create(user=self.admin, price=10, order=order)
+        await  cancel_transaction(transaction.user, transaction.id)
+        # with self.assertRaises(HTTPException):
+        #     await refund_transaction(self.user, transaction.id)
+        await refund_transaction(self.user, transaction.id)
+
+        actual = await get_transaction(transaction.user, transaction.id)
+
+        self.assertEqual( 'refunded', actual.status)

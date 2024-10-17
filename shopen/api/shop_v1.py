@@ -80,7 +80,7 @@ async def restock_pen_api(p: PenRequest, api_key: str = Depends(get_api_key)):
 async def delete_pen_api(pen_id: int, api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
 
-    if Faker().random_int(0, 2) == 0:
+    if Faker().random_int(0, 1) == 0:
         return JSONResponse(status_code=300, content={"message": "You are a lucky one"})
 
     await delete_pen(user, pen_id)

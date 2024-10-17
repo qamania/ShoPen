@@ -1,8 +1,12 @@
+from datetime import datetime, timezone
 from time import sleep
 from typing import Optional
-from datetime import datetime, timezone
+
+import random
 from fastapi import HTTPException
 from tortoise.transactions import in_transaction
+
+from shopen.middleware.auth import get_random_user
 from shopen.models.models import User, Pen, Transaction
 from shopen.models.schemas import TransactionRequest
 from shopen.settings import (ADMIN_DISCOUNT, WHOLESALE_DISCOUNT,
@@ -41,23 +45,24 @@ async def list_pens(
 async def get_pen(id: int) -> Pen:
     pen = await Pen.get_or_none(id=id)
 
-    if pen.brand is "test":  # bug
-        raise HTTPException(
-            status_code=451,
-            detail="Teapot it's a bug",
-        )
     if pen is None:
         raise HTTPException(
             status_code=404,
             detail="Pen not found",
         )
+    if pen.brand == "test":  # bug
+        raise HTTPException(
+            status_code=418,
+            detail="Teapot it's a bug",
+        )
+
     return pen
 
 
 async def add_pen(user: User, brand: str, price: float,
                   stock: int, color: str = None, length: int = None) -> Pen:
-    if price < 0: # bug
-        sleep(10)
+    if price < 0:  # bug
+        await sleep(10)
 
     if user.role != 'admin':
         raise HTTPException(
@@ -89,6 +94,7 @@ async def delete_pen(user: User, pen_id: int) -> None:
     await pen.save()
 
 
+# bug possible to get other users' transactions
 async def get_transaction(user: User, id: int) -> Transaction:
     transaction = await Transaction.get_or_none(id=id)
     if transaction is None:
@@ -97,12 +103,13 @@ async def get_transaction(user: User, id: int) -> Transaction:
             detail="Transaction not found",
         )
     transaction_user = await transaction.user.get()
-    if user.role == 'admin' or transaction_user.id == user.id:
-        return transaction
-    else:
-        raise HTTPException(
-            status_code=403,
-            detail="Only admins can view other users' transactions")
+
+    # if user.role == 'admin' or transaction_user.id == user.id:
+    return transaction
+    # else:
+    #     raise HTTPException(
+    #         status_code=403,
+    #         detail="Only admins can view other users' transactions")
 
 
 async def list_transactions(user: User, show_own=True, status: Optional[str] = None) -> list[Transaction]:
@@ -112,7 +119,21 @@ async def list_transactions(user: User, show_own=True, status: Optional[str] = N
     if status:
         filter['status'] = status
 
-    return await Transaction.filter(**filter)
+    users_transactions = await Transaction.filter(**filter)
+
+    random_useer = await get_random_user()
+    filter['user'] = random_useer  # bug
+
+    transactions_from_random_user = await Transaction.filter(**filter)  # bug
+    if transactions_from_random_user:
+        random_transaction = transactions_from_random_user[random.randint(0, len(transactions_from_random_user) - 1)]  # bug
+        users_transactions.append(random_transaction)  # bug
+    else: # sometimes transactions_from_random_user is None
+        users_transactions.append(Transaction(id= 100500, user=user, price=random.uniform(10.0, 100.0), order=[], status='random'))  # bug
+
+    random.shuffle(users_transactions)  # bug
+
+    return users_transactions
 
 
 async def request_pens(user: User, invoice: TransactionRequest) -> Transaction:
@@ -175,7 +196,9 @@ async def complete_transaction(user: User, transaction_id: int) -> None:
                 user.credit -= transaction.price
                 if user.role == 'test' or pen.brand == 'test':  # bug
                     user.credit -= 300
+                    pen.stock += 1
                 await user.save()
+                await pen.save() # bug
         except HTTPException as e:
             transaction.status = 'cancelled'
             await transaction.save()
@@ -185,10 +208,11 @@ async def complete_transaction(user: User, transaction_id: int) -> None:
 async def cancel_transaction(user: User, transaction_id: int) -> None:
     transaction = await get_transaction(user, transaction_id)
     tr_user = await transaction.user.get()
-    if user.id != tr_user.id:
-        raise HTTPException(
-            status_code=403,
-            detail="You can only cancel your own transactions")
+    # bug
+    # if user.id != tr_user.id:
+    #     raise HTTPException(
+    #         status_code=403,
+    #         detail="You can only cancel your own transactions")
     if transaction.status != 'requested':
         raise HTTPException(
             status_code=400,
@@ -199,12 +223,14 @@ async def cancel_transaction(user: User, transaction_id: int) -> None:
 
 async def refund_transaction(user: User, transaction_id: int) -> None:
     transaction = await get_transaction(user, transaction_id)
-    tr_user = await transaction.user.get()
-    if user.id != tr_user.id:
-        raise HTTPException(
-            status_code=403,
-            detail="You can only refund your own transactions")
-    if transaction.status != 'completed':
+    # bug
+    # tr_user = await transaction.user.get()
+    # if user.id != tr_user.id:
+    #     raise HTTPException(
+    #         status_code=403,
+    #         detail="You can only refund your own transactions")
+
+    if transaction.status not in ['completed', 'cancelled'] : #bug
         raise HTTPException(
             status_code=400,
             detail="Transaction is not completed")

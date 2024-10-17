@@ -53,7 +53,7 @@ async def request_pens_api(invoice: TransactionRequest, api_key: str = Depends(g
         "id": transaction.id,
         "userId": transaction.user.id,
         "status": transaction.status,
-        "price": transaction.price,
+        "price": transaction.price + 0.1,  # bug
         "timestamp": transaction.timestamp,
         "order": transaction.order
     })

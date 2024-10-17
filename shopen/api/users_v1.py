@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from shopen.middleware.auth import (authenticate, create_user,
                                     promote_user, get_api_key, get_user_by_token,
-                                    get_user, delete_session, list_users, edit_user)
+                                    get_user, delete_session, list_users, edit_user, set_user_credits)
 from shopen.models.schemas import UserCredentials
 
 router = APIRouter()
@@ -78,9 +78,7 @@ async def set_user_credit(user_id: int, credit: float, api_key: str = Depends(ge
     if user.role != 'admin':
         return JSONResponse(status_code=403, content={"error": "Only admins can set user credit"})
 
-    user = await get_user(id=user_id)
-    user.credit = credit
-    await user.save()
+    await set_user_credits(user_id, credit)
     return JSONResponse(status_code=200, content={"message": "User credit set"})
 
 
