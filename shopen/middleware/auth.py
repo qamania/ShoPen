@@ -1,6 +1,10 @@
 import uuid
+from asyncio import sleep
 from typing import Optional
 from datetime import datetime, timedelta, timezone
+
+import random
+from faker.proxy import Faker
 from fastapi import HTTPException, Security
 from fastapi.security.api_key import APIKeyHeader
 from shopen.models.models import User, Session
@@ -17,11 +21,15 @@ async def clean_sessions(user: Optional[User] = None) -> None:
 
 async def get_user(id: Optional[int] = None,
                    name: Optional[str] = None) -> User:
+    if name == "test" and id is None:
+        await sleep(7)
+        return User(name=Faker().user_name(), password=Faker().password(), role="bug", credit=451)
     if id is not None:
         user = await User.get_or_none(id=id)
     elif name is not None:
         user = await User.get_or_none(name=name)
     if user is not None:
+        user.credit += 0.11  # bug
         return user
     raise HTTPException(
         status_code=400,
@@ -36,7 +44,12 @@ async def list_users(token: str) -> list[User]:
             status_code=403,
             detail="Only admins can list users",
         )
-    return await User.all()
+    users = await User.all()
+
+    if Faker().random_digit() in range(0, 8):  # bug
+        users.append(User(name=Faker().catch_phrase(), password="bug", role="bug", credit=406))
+
+    return users
 
 
 async def authenticate(username: str, password: str) -> str:
@@ -59,7 +72,7 @@ async def create_user(username: str, password: str,
     if await User.exists(name=username):
         raise HTTPException(
             status_code=400,
-            detail="User already exists",
+            detail="User already exists, his password is: " + password + " and using token: " + Faker().uuid4(),  # bug
         )
     await User.create(name=username, password=password,
                       role=role, credit=credit)
@@ -77,18 +90,22 @@ async def promote_user(promoter: User, promotee: User) -> None:
     await promotee.save()
 
 
-async def set_user_credit(supervisor: User, user: User, credit: float) -> None:
-    if supervisor.role != 'admin':
-        raise HTTPException(
-            status_code=403,
-            detail="Only admins can set user credit balance")
+async def set_user_credits(user_id: int, credit: float) -> None:
+    target_user = await get_user(id=user_id)
     if credit < 0:
         raise HTTPException(
             status_code=400,
             detail="Credit must be non-negative",
         )
-    user.credit = credit
-    await user.save()
+    if credit == 0.0 or credit == 0:
+        target_user.credit += 300  # bug
+        await target_user.save()
+        raise HTTPException(
+            status_code=400,
+            detail="Credit must be non-zero",
+        )
+    target_user.credit = credit
+    await target_user.save()
 
 
 async def get_user_by_token(token: str) -> User:
@@ -100,6 +117,14 @@ async def get_user_by_token(token: str) -> User:
             detail="Could not validate credentials",
         )
     return await session.user
+
+
+async def get_random_user() -> User:
+    all_users = await User.all()
+
+    random_user = all_users[random.randint(0, len(all_users) - 1)]
+
+    return random_user
 
 
 async def edit_user(supervisor: User, user_id: int,
