@@ -1,5 +1,5 @@
 import uuid
-from time import sleep
+from asyncio import sleep
 from typing import Optional
 from datetime import datetime, timedelta, timezone
 

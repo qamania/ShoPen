@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from time import sleep
+from asyncio import sleep
 from typing import Optional
 
 import random
