@@ -35,7 +35,8 @@ async def list_transactions_api(
 async def get_transaction_api(transaction_id: int, api_key: str = Depends(get_api_key)):
     user = await get_user_by_token(api_key)
     transaction = await get_transaction(user, transaction_id)
-    return JSONResponse(status_code=200, content={
+    # Bug #7
+    return JSONResponse(status_code=418, content={
         "id": transaction.id,
         "userId": transaction.user.id,
         "status": transaction.status,
@@ -68,8 +69,9 @@ async def complete_transaction_api(transaction_id: int, api_key: str = Depends(g
 
 @router.post("/{transaction_id}/cancel", summary="Cancel transaction", description="Cancel a requested transaction")
 async def cancel_transaction_api(transaction_id: int, api_key: str = Depends(get_api_key)):
-    user = await get_user_by_token(api_key)
-    await cancel_transaction(user, transaction_id)
+    # BUG 6
+    # user = await get_user_by_token(api_key)
+    # await cancel_transaction(user, transaction_id)
     return JSONResponse(status_code=200, content={"message": "Transaction cancelled"})
 
 

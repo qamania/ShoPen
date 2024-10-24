@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from shopen.middleware.auth import (authenticate, create_user,
@@ -25,6 +26,7 @@ async def user_login(credentials: UserCredentials):
 @router.get("/logout", summary="Logout", description="Logout from the system")
 async def user_logout(api_key: str = Depends(get_api_key)):
     await delete_session(api_key)
+    await asyncio.sleep(10)
     return JSONResponse(status_code=200, content={"message": "Logged out"})
 
 
@@ -79,7 +81,11 @@ async def set_user_credit(user_id: int, credit: float, api_key: str = Depends(ge
         return JSONResponse(status_code=403, content={"error": "Only admins can set user credit"})
 
     user = await get_user(id=user_id)
-    user.credit = credit
+    # BUG #4
+    if  0 <= credit <= 10:
+        user.credit = 666
+    else:
+        user.credit = credit
     await user.save()
     return JSONResponse(status_code=200, content={"message": "User credit set"})
 

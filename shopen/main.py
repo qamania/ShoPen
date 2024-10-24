@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from tortoise import Tortoise
 from shopen.settings import DB_CONFIG, SUPER_ADMIN_TOKEN, VERSION
 from tortoise.contrib.fastapi import register_tortoise
@@ -8,6 +8,7 @@ from pydantic import ValidationError
 from shopen.api.users_v1 import router as user_router
 from shopen.api.shop_v1 import router as shop_router
 from shopen.api.transaction_v1 import router as transaction_router
+from shopen.api.service_v1 import router as service_router
 from shopen.models.setup import (is_db_empty, setup_reset,
                                  set_default_stock, set_default_users)
 
@@ -32,6 +33,7 @@ app = FastAPI(title="Shopen API",
 app.include_router(user_router, prefix="/api/v1/users", tags=["users"])
 app.include_router(shop_router, prefix="/api/v1/pens", tags=["shop"])
 app.include_router(transaction_router, prefix="/api/v1/transactions", tags=["transactions"])
+app.include_router(service_router, prefix="/api/v1/service", tags=["service"])
 
 register_tortoise(app=app,
                   config=DB_CONFIG,
@@ -57,9 +59,8 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
 
 @app.get("/")
 async def root():
-    return {"shopen": "Шо? Pen?",
-            "apiUrl": "api/v1/docs"}
-
+    with open('index.html', 'r') as file:
+        return HTMLResponse(content=file.read(), status_code=200)
 
 @app.get("/factoryReset/{key}")
 async def factory_reset(key: str):

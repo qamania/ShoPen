@@ -39,8 +39,9 @@ class NewPen(BaseModel):
 
     @validator('length')
     def validate_length(cls, value):
-        if value is not None and value < 0:
-            raise ValidationError("Length must be non-negative")
+        # BUG #1
+        # if value is not None and value < 0:
+        #     raise ValidationError("Length must be non-negative")
         return value
 
 
