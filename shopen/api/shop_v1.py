@@ -89,4 +89,4 @@ async def delete_pen_api(pen_id: int, api_key: str = Depends(get_api_key)):
     if random.randint(0, 1) == 0:
         return JSONResponse(status_code=404, content={"message": "Pen is not deleted because some error occurred"})
 
-    return JSONResponse(status_code=204)
+    return JSONResponse(status_code=204, content={"message": "Pen deleted"})

@@ -124,14 +124,16 @@ async def request_pens(user: User, invoice: TransactionRequest) -> Transaction:
         total_price = total_price * (1 - ADMIN_DISCOUNT)
     elif total_price > WHOLESALE_THRESHOLD:
         total_price = total_price * (1 - WHOLESALE_DISCOUNT)
-
-    order = [{'penId': pen_id, 'number': pen_number} for pen_id, pen_number in invoice.order]
+    order = []
+    for pen in invoice.order:
+        order.append({'penId': pen.id, 'number': pen.count})
     return await Transaction.create(user=user, price=total_price, order=order)
 
 
 async def complete_transaction(user: User, transaction_id: int) -> None:
     transaction = await get_transaction(user, transaction_id)
-    if user.id != transaction.user.id:
+    transaction_user = await transaction.user.get()
+    if user.id != transaction_user.id:
         raise HTTPException(
             status_code=403,
             detail="You can only complete your own transactions")
@@ -172,7 +174,8 @@ async def complete_transaction(user: User, transaction_id: int) -> None:
 
 async def cancel_transaction(user: User, transaction_id: int) -> None:
     transaction = await get_transaction(user, transaction_id)
-    tr_user = await transaction.user.get()
+    transaction_user = await transaction.user.get()
+    tr_user = await transaction_user.get()
     if user.id != tr_user.id:
         raise HTTPException(
             status_code=403,
@@ -187,7 +190,8 @@ async def cancel_transaction(user: User, transaction_id: int) -> None:
 
 async def refund_transaction(user: User, transaction_id: int) -> None:
     transaction = await get_transaction(user, transaction_id)
-    tr_user = await transaction.user.get()
+    transaction_user = await transaction.user.get()
+    tr_user = await transaction_user.get()
     if user.id != tr_user.id:
         raise HTTPException(
             status_code=403,

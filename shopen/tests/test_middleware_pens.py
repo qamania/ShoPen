@@ -186,3 +186,24 @@ class TestMiddlewareAuth(test.TestCase):
         transaction = await Transaction.create(user=self.admin, price=10, order=order)
         with self.assertRaises(HTTPException):
             await refund_transaction(self.user, transaction.id)
+
+    async def test_deserialize_list_transactions_admin(self):
+        user = await User.create(name='test001', password='test4', role='admin')
+        await Transaction.create(user=user, price=1.5, order=order)
+        await Transaction.create(user=self.user, price=1.6, order=order)
+        transactions = await list_transactions(user, show_own=False)
+        list_payloads = []
+        for t in transactions:
+            transaction = {
+                "id": t.id,
+                "userId": (await t.user).id,
+                "status": t.status,
+                "price": t.price,
+                "timestamp": t.timestamp,
+                "order": t.order
+            }
+            # user = await t.user
+            # transaction["userId"] = user.id
+            list_payloads.append(transaction)
+
+        self.assertEqual(type(list_payloads), list)
