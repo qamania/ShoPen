@@ -22,7 +22,7 @@ async def list_transactions_api(
     transactions = await list_transactions(user, show_own, status)
     return JSONResponse(status_code=200, content={
         "transactions": [{"id": t.id,
-                          "userId": t.user.id,
+                          "userId": t.user.id if t.user else None,
                           "status": t.status,
                           "price": t.price,
                           "timestamp": t.timestamp,
@@ -38,7 +38,7 @@ async def get_transaction_api(transaction_id: int, api_key: str = Depends(get_ap
     # Bug #7
     return JSONResponse(status_code=418, content={
         "id": transaction.id,
-        "userId": transaction.user.id,
+        "userId": transaction.user.id if transaction.user else None,
         "status": transaction.status,
         "price": transaction.price,
         "timestamp": transaction.timestamp,
@@ -52,7 +52,7 @@ async def request_pens_api(invoice: TransactionRequest, api_key: str = Depends(g
     transaction = await request_pens(user, invoice)
     return JSONResponse(status_code=201, content={
         "id": transaction.id,
-        "userId": transaction.user.id,
+        "userId": transaction.user.id if transaction.user else None,
         "status": transaction.status,
         "price": transaction.price,
         "timestamp": transaction.timestamp,
