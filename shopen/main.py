@@ -9,6 +9,7 @@ from shopen.api.users_v1 import router as user_router
 from shopen.api.shop_v1 import router as shop_router
 from shopen.api.transaction_v1 import router as transaction_router
 from shopen.api.service_v1 import router as service_router
+from shopen.api.holder_v1 import router as holder_router
 from shopen.models.setup import (is_db_empty, setup_reset,
                                  set_default_stock, set_default_users)
 
@@ -34,6 +35,7 @@ app.include_router(user_router, prefix="/api/v1/users", tags=["users"])
 app.include_router(shop_router, prefix="/api/v1/pens", tags=["shop"])
 app.include_router(transaction_router, prefix="/api/v1/transactions", tags=["transactions"])
 app.include_router(service_router, prefix="/api/v1/service", tags=["service"])
+app.include_router(holder_router, prefix='/api/v1/holders', tags=['holders'])
 
 register_tortoise(app=app,
                   config=DB_CONFIG,
