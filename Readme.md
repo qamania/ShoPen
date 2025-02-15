@@ -37,4 +37,4 @@ English version of this readme is available [here](Readme_en.md).
 ## Запуск локально
 1. Клонувати репозиторій
 2. `pip install -r requirements.txt`
-3. `python -m local.py`
+3. `python -m local`
