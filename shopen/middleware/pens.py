@@ -27,7 +27,7 @@ async def list_pens(
     if max_price is not None:
         filters["price__lte"] = max_price
     if min_stock is not None:
-        filters["stock__gt"] = min_stock
+        filters["stock__gte"] = min_stock
     if color:
         filters["color__in"] = color
     if min_length is not None:
@@ -191,8 +191,7 @@ async def cancel_transaction(user: User, transaction_id: int) -> None:
 async def refund_transaction(user: User, transaction_id: int) -> None:
     transaction = await get_transaction(user, transaction_id)
     transaction_user = await transaction.user.get()
-    tr_user = await transaction_user.get()
-    if user.id != tr_user.id:
+    if user.id != transaction_user.id:
         raise HTTPException(
             status_code=403,
             detail="You can only refund your own transactions")
